@@ -8,6 +8,8 @@ public class EnemyControl : MonoBehaviour
     public TMP_Text hpText;
     public LevelControl levelControl;
     public PlayerControl playerControl;
+    public GameObject rewards;
+    public RewardManager rewardManager;
 
     [Header("HUD")]
     public int currentHp = 0;
@@ -21,6 +23,7 @@ public class EnemyControl : MonoBehaviour
     {
         levelControl = FindObjectOfType<LevelControl>();
         playerControl = FindObjectOfType<PlayerControl>();
+        rewardManager = FindObjectOfType<RewardManager>();
 
         currentHp = 10 + (levelControl.opponentCount * 3);
         maxHp = currentHp;
@@ -29,7 +32,6 @@ public class EnemyControl : MonoBehaviour
 
     private void Update()
     {
-        Attack();
         OnDeath();
         UpdateText();
     }
@@ -49,6 +51,8 @@ public class EnemyControl : MonoBehaviour
         if (currentHp <= 0)
         {
             levelControl.opponentCount += 1;
+            rewards.SetActive(true);
+            rewardManager.ShowRewards();
             gameObject.SetActive(false);
         }
             

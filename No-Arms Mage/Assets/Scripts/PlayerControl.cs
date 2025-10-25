@@ -8,37 +8,32 @@ public class PlayerControl : MonoBehaviour
     public TMP_Text hpText;
     public TMP_Text apText;
     public EnemyControl enemyControl;
+    public TurnManager turnManager;
 
     [Header("HUD")]
     public int currentHp = 0;
-    private int maxHp = 0;
+    public int maxHp = 0;
     public int currentAp = 0;
-    private int maxAp = 0;
+    public int maxAp = 0;
 
     [Header("Gameplay")]
     public bool myTurn = true;
-    public int atk = 0;
 
     private void Start()
     {
         enemyControl = FindObjectOfType<EnemyControl>();
-        atk = 5;
+        turnManager = FindObjectOfType<TurnManager>();
     }
 
     private void Update()
     {
-        Attack();
         UpdateText();
     }
 
-    public void Attack()
+    public void OnCardPlayed()
     {
-        if (myTurn == true)
-        {
-            enemyControl.currentHp -= atk;
-            myTurn = false;
-            enemyControl.myTurn = true;
-        }
+        turnManager.EndPlayerTurn();
+        turnManager.StartEnemyTurn();
     }
 
     public void UpdateText()
