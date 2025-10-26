@@ -19,15 +19,26 @@ public class EnemyControl : MonoBehaviour
     public bool myTurn = false;
     public int atk = 0;
 
-    public void OnEnable()
+    private void Start()
     {
         levelControl = FindObjectOfType<LevelControl>();
         playerControl = FindObjectOfType<PlayerControl>();
         rewardManager = FindObjectOfType<RewardManager>();
-
         currentHp = 10 + (levelControl.opponentCount * 3);
         maxHp = currentHp;
         atk = 1 + (levelControl.opponentCount * 2);
+
+        myTurn = false;
+    }
+
+    public void SetupEnemy()
+    {
+        currentHp = 10 + (levelControl.opponentCount * 3);
+        maxHp = currentHp;
+        atk = 1 + (levelControl.opponentCount * 2);
+
+        myTurn = false;
+        UpdateText();
     }
 
     private void Update()
@@ -52,10 +63,23 @@ public class EnemyControl : MonoBehaviour
         {
             levelControl.opponentCount += 1;
             rewards.SetActive(true);
+
+            rewardManager.onRewardChosen = RespawnEnemy;
             rewardManager.ShowRewards();
+
             gameObject.SetActive(false);
         }
-            
+    }
+
+    private void RespawnEnemy()
+    {
+        currentHp = 10 + (levelControl.opponentCount * 3);
+        maxHp = currentHp;
+        atk = 1 + (levelControl.opponentCount * 2);
+        myTurn = false;
+        UpdateText();
+
+        gameObject.SetActive(true);
     }
 
     public void UpdateText()

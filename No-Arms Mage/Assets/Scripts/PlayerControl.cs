@@ -30,11 +30,13 @@ public class PlayerControl : MonoBehaviour
         UpdateText();
     }
 
-    public void OnCardPlayed()
+    public void OnCardPlayed(GameObject playedCard, GameObject cardPrefab)
     {
-        turnManager.EndPlayerTurn();
+        turnManager.deckManager.PlayCard(playedCard, cardPrefab);
         turnManager.StartEnemyTurn();
     }
+
+
 
     public void UpdateText()
     {

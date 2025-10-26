@@ -18,9 +18,10 @@ public class CardClick : MonoBehaviour
         if (player.myTurn && effect != null)
         {
             effect.Activate(player);
-            player.OnCardPlayed();
-            Destroy(gameObject);
+            var prefab = GetComponent<RewardChoice>()?.realCardPrefab ?? gameObject; 
+            player.OnCardPlayed(gameObject, prefab);
         }
     }
+
 }
 

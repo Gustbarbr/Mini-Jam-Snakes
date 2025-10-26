@@ -1,6 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TurnManager : MonoBehaviour
 {
@@ -15,24 +15,42 @@ public class TurnManager : MonoBehaviour
 
     public void StartPlayerTurn()
     {
+        if (CheckPlayerDeath()) return;
+
         player.myTurn = true;
         enemy.myTurn = false;
-        deckManager.GenerateCards();
-    }
-
-    public void EndPlayerTurn()
-    {
-        player.myTurn = false;
-        enemy.myTurn = true;
     }
 
     public void StartEnemyTurn()
     {
-        enemy.Attack();
-        if (player.currentHp > 0)
+        player.myTurn = false;
+        StartCoroutine(StartEnemyTurnRoutine());
+    }
+
+    private IEnumerator StartEnemyTurnRoutine()
+    {
+        enemy.myTurn = true;
+
+        yield return new WaitForSeconds(0.5f);
+
+        if (!CheckPlayerDeath())
         {
-            StartPlayerTurn();
+            enemy.Attack();
         }
+
+        enemy.myTurn = false;
+
+        if (!CheckPlayerDeath())
+            StartPlayerTurn();
+    }
+
+    private bool CheckPlayerDeath()
+    {
+        if (player.currentHp <= 0)
+        {
+            SceneManager.LoadScene("MainMenu");
+            return true;
+        }
+        return false;
     }
 }
-

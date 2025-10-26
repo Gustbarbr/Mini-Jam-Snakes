@@ -3,58 +3,92 @@ using UnityEngine;
 
 public class RewardManager : MonoBehaviour
 {
-    public GameObject[] rewardCardOptions; 
-    public Transform[] rewardSlots; 
-    public DeckCollection deckCollection;
-
+    public Transform[] rewardSlots;
+    public GameObject[] rewardCardPrefabs;
+    public DeckManager playerDeckManager; 
+    public GameObject rewardScreen; 
     private GameObject[] spawnedRewards;
-
-    public GameObject enemy;
-
-    private void Start()
-    {
-        deckCollection = FindObjectOfType<DeckCollection>();
-    }
+    public System.Action onRewardChosen;
 
     public void ShowRewards()
     {
-        List<GameObject> availableRewards = new List<GameObject>(rewardCardOptions);
         spawnedRewards = new GameObject[rewardSlots.Length];
+
+        List<int> availableIndexes = new List<int>();
+        for (int j = 0; j < rewardCardPrefabs.Length; j++)
+            availableIndexes.Add(j);
 
         for (int i = 0; i < rewardSlots.Length; i++)
         {
-            if (availableRewards.Count == 0) break;
+            if (rewardSlots[i].childCount > 0)
+                Destroy(rewardSlots[i].GetChild(0).gameObject);
 
-            int random = Random.Range(0, availableRewards.Count);
-            GameObject chosen = availableRewards[random];
+            int prefabIndex;
 
-            spawnedRewards[i] = Instantiate(chosen, rewardSlots[i]);
-            availableRewards.RemoveAt(random); 
+            if (availableIndexes.Count > 0)
+            {
+                int randomIndexInList = Random.Range(0, availableIndexes.Count);
+                prefabIndex = availableIndexes[randomIndexInList];
+                availableIndexes.RemoveAt(randomIndexInList); 
+            }
+            else
+            {
+                prefabIndex = Random.Range(0, rewardCardPrefabs.Length);
+            }
+
+            GameObject icon = Instantiate(rewardCardPrefabs[prefabIndex], rewardSlots[i]);
+            icon.transform.localPosition = Vector3.zero;
+
+            var rewardChoice = icon.GetComponent<RewardChoice>();
+            if (rewardChoice != null)
+                rewardChoice.slotIndex = i;
+
+            spawnedRewards[i] = icon;
         }
+
+        rewardScreen.SetActive(true);
     }
 
 
-    public void PickReward(int choiceIndex)
+
+
+    public void PickReward(int slotIndex)
     {
-        GameObject reward = spawnedRewards[choiceIndex];
-        deckCollection.AddCard(reward);
+        GameObject chosenIcon = spawnedRewards[slotIndex];
+        RewardChoice data = chosenIcon.GetComponent<RewardChoice>();
 
-        rewardCardOptions = RemoveCardFromArray(rewardCardOptions, reward);
+        if (data != null && data.realCardPrefab != null)
+        {
+            var effect = data.realCardPrefab.GetComponent<ICardEffect>();
 
-        for (int i = 0; i < spawnedRewards.Length; i++)
-            if (i != choiceIndex && spawnedRewards[i] != null)
-                Destroy(spawnedRewards[i]);
+            bool isOneTimeUse = false;
 
-        enemy.SetActive(true);
-        gameObject.SetActive(false);
+            var hpCard = data.realCardPrefab.GetComponent<IncreaseHpCard>();
+            var apCard = data.realCardPrefab.GetComponent<IncreaseApCard>();
+
+            if ((hpCard != null && hpCard.oneTimeUse) || (apCard != null && apCard.oneTimeUse))
+                isOneTimeUse = true;
+
+            if (isOneTimeUse)
+            {
+                effect.Activate(FindObjectOfType<PlayerControl>());
+            }
+            else
+            {
+                playerDeckManager.AddCardToDeck(data.realCardPrefab);
+            }
+        }
+
+        rewardScreen.SetActive(false);
+
+        foreach (var icon in spawnedRewards)
+        {
+            if (icon != null) Destroy(icon);
+        }
+
+        onRewardChosen?.Invoke();
     }
 
-    private GameObject[] RemoveCardFromArray(GameObject[] array, GameObject target)
-    {
-        List<GameObject> newList = new List<GameObject>(array);
-        newList.Remove(target);
-        return newList.ToArray();
-    }
+
 
 }
-
